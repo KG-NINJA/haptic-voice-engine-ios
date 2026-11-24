@@ -85,7 +85,7 @@ final class HapticVoiceEngineUITests: XCTestCase {
         XCTAssertTrue(status.waitForExistence(timeout: 30))
         XCTAssertTrue(app.staticTexts["playbackState"].waitForLabel(containing: "(experimental)", timeout: 30), label(app, "playbackState"))
         XCTAssertFalse(label(app, "playbackState").localizedCaseInsensitiveContains("reproduced"))
-        XCTAssertEqual(label(app, "activeMethod"), "Active method: Method 1: Envelope mapping")
+        XCTAssertEqual(label(app, "activeMethod"), "Active method: Method 4: Simple voice (pitch pulse train)")
     }
 
     func testBlindTrialHidesTargetAndRecordsAnswer() {
@@ -98,7 +98,7 @@ final class HapticVoiceEngineUITests: XCTestCase {
         XCTAssertTrue(answer.waitForExistence(timeout: 40))
         XCTAssertFalse(label(app, "playbackState").contains("あ") || label(app, "playbackState").contains("い"), "target must stay hidden")
         answer.tap()
-        XCTAssertTrue(app.staticTexts["blindSummary"].waitForLabel(containing: "Envelope: 1 trials", timeout: 3), label(app, "blindSummary"))
+        XCTAssertTrue(app.staticTexts["blindSummary"].waitForLabel(containing: "Simple voice: 1 trials", timeout: 3), label(app, "blindSummary"))
     }
 }
 

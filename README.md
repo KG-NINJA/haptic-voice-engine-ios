@@ -14,7 +14,7 @@ nothing in the app claims speech is reproduced.
 - Speech experiments for あ い う え お / Hello / AI / custom text: `AVSpeechSynthesizer.write`
   renders PCM **offline only** (never played), features are extracted (RMS envelope,
   autocorrelation F0, spectral centroid, LPC formants F1/F2 where voiced) and mapped with
-  three methods: envelope→intensity, spectrum→sharpness, combined curves + transients.
+  four methods: simple voice (clicks at the voice pitch, default), envelope→intensity, spectrum→sharpness, combined curves + transients.
 - 5×5 characterization matrix (intensity 0.2–1.0 × sharpness 0–1, 1 s each) per material.
 - Blind vowel test (target hidden), accuracy, confusion matrix, 20 % chance, binomial p-value.
 - Physical confirmation per play ("Felt vibration" / "Nothing felt") — API success ≠ vibration.

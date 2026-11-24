@@ -1,6 +1,7 @@
 import Foundation
 
 enum SpeechMappingMethod: String, CaseIterable, Identifiable, Codable {
+    case pulseVoice = "Method 4: Simple voice (pitch pulse train)"
     case envelope = "Method 1: Envelope mapping"
     case spectral = "Method 2: Spectral mapping"
     case combined = "Method 3: Combined modulation"
@@ -8,6 +9,7 @@ enum SpeechMappingMethod: String, CaseIterable, Identifiable, Codable {
     var id: String { rawValue }
     var short: String {
         switch self {
+        case .pulseVoice: return "Simple voice"
         case .envelope: return "Envelope"
         case .spectral: return "Spectral"
         case .combined: return "Combined"
@@ -16,6 +18,7 @@ enum SpeechMappingMethod: String, CaseIterable, Identifiable, Codable {
 
     var explanation: String {
         switch self {
+        case .pulseVoice: return "Simplified: voiced parts become clicks at the voice's pitch (×1/×1.5/×2, 80–300 Hz) so the actuator buzzes at that pitch; consonants become short sharp bursts; silence is silent. Experimental, not speech reproduction."
         case .envelope: return "Speech RMS envelope → haptic intensity curve. Sharpness fixed at 0.5."
         case .spectral: return "Normalized log spectral centroid → sharpness curve (an experimental mapping, not frequency reproduction). Intensity gated by speech activity."
         case .combined: return "Envelope → intensity, centroid → sharpness, 25 Hz requested intensity modulation in voiced frames, transients at onsets/phoneme markers."
@@ -35,7 +38,7 @@ enum SpeechHapticMapper {
         var notes: [String]
     }
 
-    static func map(_ f: SpeechFeatures, method: SpeechMappingMethod, label: String, markers: [SynthesizedSpeech.Marker] = []) -> Result {
+    static func map(_ f: SpeechFeatures, method: SpeechMappingMethod, label: String, markers: [SynthesizedSpeech.Marker] = [], pitchScale: Double = 1) -> Result {
         var notes: [String] = []
         var duration = f.duration
         if duration > HapticLimits.maxPlaybackDuration {
@@ -51,6 +54,10 @@ enum SpeechHapticMapper {
         let sharpPoints = idx.map { HapticPatternSpec.CurvePoint(time: f.times[$0], value: normalizedCentroid(f.centroid[$0])) }
 
         switch method {
+        case .pulseVoice:
+            let voice = pulseVoice(f, duration: duration, pitchScale: pitchScale)
+            spec.events = voice.events
+            notes += voice.notes
         case .envelope:
             spec.events = [.init(kind: .continuous, time: 0, duration: duration, intensity: 1, sharpness: 0.5)]
             spec.curves = HapticPatternSpec.chunkedCurves(parameter: .intensity, points: envPoints)
@@ -79,6 +86,56 @@ enum SpeechHapticMapper {
             notes.append("25 Hz modulation is requested via curve points; the actuator may not reproduce it")
         }
         return Result(spec: spec, notes: notes)
+    }
+
+    static let pulsePitchRange: (Double, Double) = (80, 300)
+    static let pitchScales: [Double] = [1, 1.5, 2]
+    static let fallbackPitch: Double = 120
+
+    /// Voiced frames → transient clicks one pitch period apart, consonant frames → short sharp
+    /// continuous bursts, silence → nothing. Click trains at the voice pitch are the simplest
+    /// pattern that can make the actuator buzz at a speech-like pitch with speech-like rhythm.
+    static func pulseVoice(_ f: SpeechFeatures, duration: Double, pitchScale: Double = 1, gate: Float = 0.15) -> (events: [HapticPatternSpec.Event], notes: [String]) {
+        var events: [HapticPatternSpec.Event] = []
+        var lastPitch = f.summary.meanF0 ?? fallbackPitch
+        var nextPulse = 0.0
+        var burstStart: Double?
+        let hop = max(f.hop, 1e-6)
+        let (lo, hi) = pulsePitchRange
+
+        func closeBurst(at t: Double) {
+            guard let start = burstStart else { return }
+            burstStart = nil
+            let d = max(0.03, t - start)
+            events.append(.init(kind: .continuous, time: start, duration: min(d, duration - start), intensity: 0.6, sharpness: 1.0))
+        }
+
+        for i in f.times.indices where f.times[i] < duration {
+            let t = f.times[i]
+            let active = f.envelope[i] > gate
+            if active && !f.voiced[i] {
+                if burstStart == nil { burstStart = t }
+                continue
+            }
+            closeBurst(at: t)
+            guard active else { continue }
+            if f.f0[i] > 0 { lastPitch = Double(f.f0[i]) }
+            let period = 1 / min(max(lastPitch * pitchScale, lo), hi)
+            nextPulse = max(nextPulse, t)
+            let intensity = 0.4 + 0.6 * f.envelope[i]
+            let sharpness = 0.2 + 0.6 * normalizedCentroid(f.centroid[i])
+            while nextPulse < min(t + hop, duration) {
+                events.append(.init(kind: .transient, time: nextPulse, duration: 0, intensity: intensity, sharpness: sharpness))
+                nextPulse += period
+            }
+        }
+        closeBurst(at: min(f.times.last.map { $0 + hop } ?? duration, duration))
+        let pulses = events.filter { $0.kind == .transient }.count
+        let notes = [
+            String(format: "%d pitch clicks, %d consonant bursts, pitch ×%.1f clamped to %.0f–%.0f Hz", pulses, events.count - pulses, pitchScale, lo, hi),
+            "click rate is requested; whether the actuator reproduces it must be measured",
+        ]
+        return (events, notes)
     }
 
     static func normalizedCentroid(_ hz: Float) -> Float {

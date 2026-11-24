@@ -10,7 +10,7 @@ Date: 2026-11-24 (JST).
 | `HapticVoiceEngineUITests` (UI, simulated backend) | 6 | pass |
 
 Unit tests cover: curve chunking (≤ 16 points, continuous), validation/clamping/3 s truncation,
-the 25-cell matrix, every generated pattern (presets, AM rates, all three speech mappings)
+the 25-cell matrix, every generated pattern (presets, AM rates, all four speech mappings)
 being accepted by `CHHapticPattern`, AM curve cycle count, safety governor (cooldown, session
 cap, thermal), controller refusal while busy / in cooldown and STOP result, feature extraction
 on a synthetic 150 Hz vowel (F0 within ±5 Hz), silence detection, centroid normalisation,
@@ -37,3 +37,8 @@ MinimumOSVersion 17.0, unsigned (to be signed by iloader).
 - Thermal behaviour during long sessions.
 
 No hardware measurement has been performed; nothing in this repository reports one.
+
+## Iteration 2: simple voice method (2026-11-24)
+- Added Method 4 "Simple voice": transient clicks one pitch period apart in voiced parts (pitch ×1/×1.5/×2,
+  clamped 80–300 Hz), short sharp bursts for consonants, nothing in silence. Default speech method.
+- Simulator: 17 unit + 6 UI tests pass. Whether it sounds more voice-like needs the owner's listening on device.

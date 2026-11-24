@@ -48,9 +48,29 @@ final class SpeechPipelineTests: XCTestCase {
             XCTAssertLessThanOrEqual(r.spec.duration, HapticLimits.maxPlaybackDuration + 0.05)
             XCTAssertTrue(r.notes.contains { $0.contains("truncated") })
         }
-        XCTAssertFalse(results[0].spec.curves.contains { $0.parameter == .sharpness })
-        XCTAssertTrue(results[1].spec.curves.contains { $0.parameter == .sharpness })
-        XCTAssertTrue(results[2].spec.events.contains { $0.kind == .transient })
+        func result(_ m: SpeechMappingMethod) -> SpeechHapticMapper.Result { results[SpeechMappingMethod.allCases.firstIndex(of: m)!] }
+        XCTAssertFalse(result(.envelope).spec.curves.contains { $0.parameter == .sharpness })
+        XCTAssertTrue(result(.spectral).spec.curves.contains { $0.parameter == .sharpness })
+        XCTAssertTrue(result(.combined).spec.events.contains { $0.kind == .transient })
+    }
+
+    func testPulseVoiceClicksAtVoicePitchAndStaysSilentInGaps() {
+        let sr = 22050.0
+        let vowel = SyntheticSignal.vowel(f0: 150, seconds: 0.5)
+        let samples = vowel + [Float](repeating: 0, count: Int(sr * 0.3)) + vowel
+        let f = SpeechFeatureExtractor.extract(samples: samples, sampleRate: sr)
+        let r = SpeechHapticMapper.map(f, method: .pulseVoice, label: "x")
+        let clicks = r.spec.events.filter { $0.kind == .transient }.map(\.time)
+        XCTAssertGreaterThan(clicks.count, 100)
+        XCTAssertTrue(r.spec.curves.isEmpty)
+        let gaps = zip(clicks.dropFirst(), clicks).map { $0 - $1 }.sorted()
+        XCTAssertEqual(gaps[gaps.count / 2], 1.0 / 150, accuracy: 0.0005)
+        XCTAssertGreaterThan(gaps.last ?? 0, 0.2, "silence between the two vowels must have no clicks")
+        XCTAssertLessThanOrEqual(clicks.count, Int(HapticLimits.maxPlaybackDuration * SpeechHapticMapper.pulsePitchRange.1) + 1)
+
+        let raised = SpeechHapticMapper.map(f, method: .pulseVoice, label: "x", pitchScale: 2).spec.events.filter { $0.kind == .transient }.map(\.time)
+        let raisedGaps = zip(raised.dropFirst(), raised).map { $0 - $1 }.sorted()
+        XCTAssertEqual(raisedGaps[raisedGaps.count / 2], 1.0 / 300, accuracy: 0.0005)
     }
 
     /// Real offline synthesis on the simulator: PCM comes back and nothing needs an audio output.

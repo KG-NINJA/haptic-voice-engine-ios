@@ -8,7 +8,7 @@ struct ContentView: View {
     @State private var sharpness: Double = 0.5
     @State private var duration: Double = 1.0
     @State private var modulation: ModulationRate = .none
-    @State private var method: SpeechMappingMethod = .envelope
+    @State private var method: SpeechMappingMethod = .pulseVoice
     @State private var customText = ""
     @State private var showLog = false
 
@@ -173,6 +173,12 @@ struct ContentView: View {
             }
             .pickerStyle(.segmented).accessibilityIdentifier("methodPicker")
             Text(method.explanation).font(.caption2).foregroundStyle(.secondary)
+            if method == .pulseVoice {
+                Picker("Pitch", selection: $store.pitchScale) {
+                    ForEach(SpeechHapticMapper.pitchScales, id: \.self) { Text(String(format: "Pitch ×%g", $0)).tag($0) }
+                }
+                .pickerStyle(.segmented).accessibilityIdentifier("pitchPicker")
+            }
             EagerGrid(columns: 4, items: ["あ", "い", "う", "え", "お", "Hello", "AI"]) { word in
                     Button(word) { Task { await store.playSpeech(word, method: method) } }
                         .buttonStyle(.bordered)

@@ -13,6 +13,7 @@ final class ExperimentStore: ObservableObject {
     @Published private(set) var matrixRunning = false
     @Published private(set) var matrixProgress = ""
     @Published var listener = "listener-1"
+    @Published var pitchScale: Double = 1
     @Published private(set) var pendingBlindTrial: BlindTrial?
     @Published private(set) var lastExportURL: URL?
 
@@ -94,10 +95,10 @@ final class ExperimentStore: ObservableObject {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { speechStatus = "Enter text first"; return }
         guard let (speech, features) = await prepare(trimmed) else { return }
-        let mapped = SpeechHapticMapper.map(features, method: method, label: "\"\(trimmed)\"", markers: speech.markers)
+        let mapped = SpeechHapticMapper.map(features, method: method, label: "\"\(trimmed)\"", markers: speech.markers, pitchScale: pitchScale)
         let s = features.summary
         start(mapped.spec, category: "speech", method: method.rawValue,
-              requested: ["speechDuration": speech.duration, "sampleRate": speech.sampleRate],
+              requested: ["speechDuration": speech.duration, "sampleRate": speech.sampleRate, "pitchScale": pitchScale],
               notes: mapped.notes + ["text=\(trimmed)", "language=\(speech.language)", "markers=\(speech.markers.count)"], features: s)
     }
 
@@ -127,7 +128,7 @@ final class ExperimentStore: ObservableObject {
         guard pendingBlindTrial == nil else { return }
         guard let target = BlindTestStats.vowels.randomElement() else { return }
         guard let (speech, features) = await prepare(target) else { return }
-        let mapped = SpeechHapticMapper.map(features, method: method, label: "Blind trial", markers: speech.markers)
+        let mapped = SpeechHapticMapper.map(features, method: method, label: "Blind trial", markers: speech.markers, pitchScale: pitchScale)
         var spec = mapped.spec
         spec.name = "Blind trial · \(method.short)"
         let trial = BlindTrial(id: nextID(prefix: "BLIND"), timestamp: now(), listener: listener, method: method, material: material, target: target)
