@@ -15,9 +15,11 @@ final class ExperimentStore: ObservableObject {
     @Published private(set) var matrixProgress = ""
     @Published var listener = "listener-1"
     @Published var pitchScale: Double = 1
+    @Published var audioFileCap: Double = HapticLimits.maxAudioFileDuration
     @Published private(set) var pendingBlindTrial: BlindTrial?
     @Published private(set) var lastExportURL: URL?
-    @Published private(set) var audioFile: (audio: LoadedAudio, features: SpeechFeatures)?
+    /// Features per selectable length, each analysed (and normalised) over that prefix only.
+    @Published private(set) var audioFile: (audio: LoadedAudio, features: [Double: SpeechFeatures])?
 
     let controller: HapticEngineController
     private let renderer = SpeechSynthesisRenderer()
@@ -141,21 +143,26 @@ final class ExperimentStore: ObservableObject {
         preparingSpeech = true
         speechStatus = "Reading \"\(url.lastPathComponent)\" (analysis only, no audio output)…"
         defer { preparingSpeech = false }
-        let result = await Task.detached { () -> Result<(LoadedAudio, SpeechFeatures), Error> in
+        let result = await Task.detached { () -> Result<(LoadedAudio, [Double: SpeechFeatures]), Error> in
             let scoped = url.startAccessingSecurityScopedResource()
             defer { if scoped { url.stopAccessingSecurityScopedResource() } }
             return Result {
-                let audio = try AudioFileLoader.load(url: url, maxDuration: HapticLimits.maxPlaybackDuration)
-                return (audio, SpeechFeatureExtractor.extract(samples: audio.samples, sampleRate: audio.sampleRate))
+                let audio = try AudioFileLoader.load(url: url, maxDuration: HapticLimits.maxAudioFileDuration)
+                var features: [Double: SpeechFeatures] = [:]
+                for cap in HapticLimits.audioFileDurations {
+                    let n = min(audio.samples.count, Int(cap * audio.sampleRate))
+                    features[cap] = SpeechFeatureExtractor.extract(samples: Array(audio.samples.prefix(n)), sampleRate: audio.sampleRate)
+                }
+                return (audio, features)
             }
         }.value
         guard request == speechRequest else { return }
         switch result {
         case .success(let (audio, features)):
             audioFile = (audio, features)
-            let s = features.summary
+            let s = (features[HapticLimits.maxAudioFileDuration] ?? SpeechFeatureExtractor.extract(samples: [], sampleRate: audio.sampleRate)).summary
             speechStatus = String(format: "\"%@\" %.2fs of %.2fs%@, voiced %.0f%%, F0 %@", audio.name, audio.duration, audio.sourceDuration,
-                                  audio.truncated ? " (first 3 s only)" : "", s.voicedFraction * 100,
+                                  audio.truncated ? String(format: " (first %.0f s only)", HapticLimits.maxAudioFileDuration) : "", s.voicedFraction * 100,
                                   s.meanF0.map { String(format: "%.0f Hz", $0) } ?? "n/a (no pitch found)")
         case .failure(let error):
             speechStatus = "Could not read audio file: \(error.localizedDescription)"
@@ -163,11 +170,13 @@ final class ExperimentStore: ObservableObject {
     }
 
     func playAudioFile(method: SpeechMappingMethod) {
-        guard let (audio, features) = audioFile else { return }
-        let mapped = SpeechHapticMapper.map(features, method: method, label: "File \"\(audio.name)\"", pitchScale: pitchScale)
+        guard let (audio, all) = audioFile, let features = all[audioFileCap] else { return }
+        let mapped = SpeechHapticMapper.map(features, method: method, label: "File \"\(audio.name)\"", pitchScale: pitchScale,
+                                         maxDuration: audioFileCap)
         start(mapped.spec, category: "audioFile", method: method.rawValue,
-              requested: ["fileDuration": audio.sourceDuration, "analysedDuration": audio.duration, "sampleRate": audio.sampleRate, "pitchScale": pitchScale],
-              notes: mapped.notes + ["file=\(audio.name)"], features: features.summary)
+              requested: ["fileDuration": audio.sourceDuration, "analysedDuration": audio.duration, "sampleRate": audio.sampleRate,
+                          "pitchScale": pitchScale, "lengthCap": audioFileCap],
+              notes: mapped.notes + ["file=\(audio.name)"], features: features.summary, maxDuration: audioFileCap)
     }
 
     // MARK: Blind test
@@ -215,10 +224,11 @@ final class ExperimentStore: ObservableObject {
 
     @discardableResult
     private func start(_ spec: HapticPatternSpec, category: String, method: String, requested: [String: Double],
-                       notes: [String] = [], features: SpeechFeatures.Summary? = nil) -> Bool {
+                       notes: [String] = [], features: SpeechFeatures.Summary? = nil,
+                       maxDuration: Double = HapticLimits.maxPlaybackDuration) -> Bool {
         pending = (category, method, material, requested, notes, features)
         activeMethod = method
-        let ok = controller.play(spec)
+        let ok = controller.play(spec, maxDuration: maxDuration)
         if !ok { pending = nil }
         return ok
     }

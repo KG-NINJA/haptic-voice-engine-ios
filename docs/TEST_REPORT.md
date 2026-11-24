@@ -54,3 +54,9 @@ No hardware measurement has been performed; nothing in this repository reports o
   (first 3 s, same methods and safety limits, `playsHapticsOnly` unchanged).
 - Simulator: 17 unit + 7 UI tests pass (a UI test loads a generated 150 Hz WAV through the real loader). `swift test`: 5 package tests.
 - Not verified: how file playback sounds on a device; file formats other than WAV in tests.
+
+## Iteration 5: longer audio file playback
+- Owner, physical iPhone: install and song playback via the audio-file path worked, but stopped after 3 s.
+- Audio-file playback length is now selectable 3 / 15 / 30 / 60 s (default 60 s). Other experiments keep the 3 s limit.
+  STOP, cooldown, play/session caps, thermal, background and engine-error stops are unchanged; the watchdog follows the cap.
+- Not verified on device: 60 s patterns (tens of thousands of transient events), heat over a full minute.
