@@ -18,7 +18,8 @@ final class ExperimentStore: ObservableObject {
     @Published var audioFileCap: Double = HapticLimits.maxAudioFileDuration
     @Published private(set) var pendingBlindTrial: BlindTrial?
     @Published private(set) var lastExportURL: URL?
-    @Published private(set) var audioFile: (audio: LoadedAudio, features: SpeechFeatures)?
+    /// Features per selectable length, each analysed (and normalised) over that prefix only.
+    @Published private(set) var audioFile: (audio: LoadedAudio, features: [Double: SpeechFeatures])?
 
     let controller: HapticEngineController
     private let renderer = SpeechSynthesisRenderer()
@@ -142,19 +143,24 @@ final class ExperimentStore: ObservableObject {
         preparingSpeech = true
         speechStatus = "Reading \"\(url.lastPathComponent)\" (analysis only, no audio output)…"
         defer { preparingSpeech = false }
-        let result = await Task.detached { () -> Result<(LoadedAudio, SpeechFeatures), Error> in
+        let result = await Task.detached { () -> Result<(LoadedAudio, [Double: SpeechFeatures]), Error> in
             let scoped = url.startAccessingSecurityScopedResource()
             defer { if scoped { url.stopAccessingSecurityScopedResource() } }
             return Result {
                 let audio = try AudioFileLoader.load(url: url, maxDuration: HapticLimits.maxAudioFileDuration)
-                return (audio, SpeechFeatureExtractor.extract(samples: audio.samples, sampleRate: audio.sampleRate))
+                var features: [Double: SpeechFeatures] = [:]
+                for cap in HapticLimits.audioFileDurations {
+                    let n = min(audio.samples.count, Int(cap * audio.sampleRate))
+                    features[cap] = SpeechFeatureExtractor.extract(samples: Array(audio.samples.prefix(n)), sampleRate: audio.sampleRate)
+                }
+                return (audio, features)
             }
         }.value
         guard request == speechRequest else { return }
         switch result {
         case .success(let (audio, features)):
             audioFile = (audio, features)
-            let s = features.summary
+            let s = (features[HapticLimits.maxAudioFileDuration] ?? SpeechFeatureExtractor.extract(samples: [], sampleRate: audio.sampleRate)).summary
             speechStatus = String(format: "\"%@\" %.2fs of %.2fs%@, voiced %.0f%%, F0 %@", audio.name, audio.duration, audio.sourceDuration,
                                   audio.truncated ? String(format: " (first %.0f s only)", HapticLimits.maxAudioFileDuration) : "", s.voicedFraction * 100,
                                   s.meanF0.map { String(format: "%.0f Hz", $0) } ?? "n/a (no pitch found)")
@@ -164,7 +170,7 @@ final class ExperimentStore: ObservableObject {
     }
 
     func playAudioFile(method: SpeechMappingMethod) {
-        guard let (audio, features) = audioFile else { return }
+        guard let (audio, all) = audioFile, let features = all[audioFileCap] else { return }
         let mapped = SpeechHapticMapper.map(features, method: method, label: "File \"\(audio.name)\"", pitchScale: pitchScale,
                                          maxDuration: audioFileCap)
         start(mapped.spec, category: "audioFile", method: method.rawValue,
