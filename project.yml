@@ -1,0 +1,60 @@
+name: HapticVoiceEngine
+options:
+  bundleIdPrefix: dev.kgninja
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: ""
+targets:
+  HapticVoiceEngine:
+    type: application
+    platform: iOS
+    sources: [HapticVoiceEngine]
+    info:
+      path: HapticVoiceEngine/Info.plist
+      properties:
+        CFBundleDisplayName: Haptic Voice
+        UILaunchScreen: {}
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        UIRequiresFullScreen: true
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.kgninja.HapticVoiceEngine
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+        ENABLE_PREVIEWS: YES
+  HapticVoiceEngineTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [HapticVoiceEngineTests]
+    dependencies:
+      - target: HapticVoiceEngine
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.kgninja.HapticVoiceEngineTests
+        GENERATE_INFOPLIST_FILE: YES
+  HapticVoiceEngineUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [HapticVoiceEngineUITests]
+    dependencies:
+      - target: HapticVoiceEngine
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.kgninja.HapticVoiceEngineUITests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: HapticVoiceEngine
+schemes:
+  HapticVoiceEngine:
+    build:
+      targets:
+        HapticVoiceEngine: all
+    test:
+      targets: [HapticVoiceEngineTests, HapticVoiceEngineUITests]
