@@ -35,6 +35,7 @@ public enum AudioFileLoader {
             for i in 0..<n { mono[i] += ch[i] }
         }
         if channels > 1 { for i in 0..<n { mono[i] /= Float(channels) } }
+        for i in 0..<n where !mono[i].isFinite { mono[i] = 0 }
         return LoadedAudio(name: url.lastPathComponent, sampleRate: sr, samples: mono,
                            sourceDuration: sr > 0 ? Double(file.length) / sr : 0)
     }
