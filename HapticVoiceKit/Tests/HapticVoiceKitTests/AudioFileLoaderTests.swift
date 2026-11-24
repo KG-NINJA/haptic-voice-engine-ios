@@ -41,6 +41,9 @@ final class AudioFileLoaderTests: XCTestCase {
         let burst = PulseVoiceTests.vowel(f0: 150, seconds: 0.015, sampleRate: sr).map { $0 * 3 }
         let f = SpeechFeatureExtractor.extract(samples: [Float](repeating: 0, count: 2000) + burst, sampleRate: sr)
         XCTAssertGreaterThanOrEqual(f.times.count, 1)
+        XCTAssertLessThanOrEqual(f.duration, 0.016)
+        XCTAssertTrue(PulseVoice.events(from: f).allSatisfy { $0.time + $0.duration <= f.duration + 1e-9 })
+        XCTAssertTrue(SpeechFeatureExtractor.extract(samples: [Float](repeating: 0, count: 200), sampleRate: sr).times.isEmpty)
     }
 
     func testMissingFileThrows() {

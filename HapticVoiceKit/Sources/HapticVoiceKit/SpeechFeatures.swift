@@ -51,10 +51,11 @@ public enum SpeechFeatureExtractor {
     public static let fftLog2n: vDSP_Length = 11
 
     public static func extract(samples input: [Float], sampleRate: Double) -> SpeechFeatures {
-        var samples = trimSilence(input)
+        let trimmed = trimSilence(input)
+        var samples = trimmed
         let hop = max(1, Int(sampleRate * hopSeconds))
         let win = max(16, Int(sampleRate * windowSeconds))
-        if !samples.isEmpty && samples.count < win { samples += [Float](repeating: 0, count: win - samples.count) }
+        if samples.count < win && samples.contains(where: { abs($0) > 0.01 }) { samples += [Float](repeating: 0, count: win - samples.count) }
         let frameCount = samples.count >= win ? (samples.count - win) / hop + 1 : 0
         let fftSize = 1 << Int(fftLog2n)
         let window = vDSP.window(ofType: Float.self, usingSequence: .hanningDenormalized, count: win, isHalfWindow: false)
@@ -85,7 +86,7 @@ public enum SpeechFeatureExtractor {
         return SpeechFeatures(hop: Double(hop) / sampleRate,
                               times: (0..<frameCount).map { Double($0 * hop) / sampleRate },
                               rms: rms, envelope: envelope, f0: f0, voiced: voiced, centroid: centroid,
-                              f1: f1, f2: f2, duration: Double(samples.count) / sampleRate)
+                              f1: f1, f2: f2, duration: Double(trimmed.count) / sampleRate)
     }
 
     public static func trimSilence(_ samples: [Float], threshold: Float = 0.01) -> [Float] {
