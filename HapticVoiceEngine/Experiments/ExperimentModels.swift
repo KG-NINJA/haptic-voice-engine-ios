@@ -48,6 +48,7 @@ struct BlindTrial: Codable, Identifiable, Equatable {
     var material: TestMaterial
     var target: String
     var answer: String?
+    var pitchScale: Double?
 }
 
 enum BlindTestStats {

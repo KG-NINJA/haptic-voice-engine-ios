@@ -21,7 +21,8 @@ final class ExperimentStore: ObservableObject {
     let controller: HapticEngineController
     private let renderer = SpeechSynthesisRenderer()
     private var speechCache: [String: (SynthesizedSpeech, SpeechFeatures)] = [:]
-    private var pending: (category: String, method: String, requested: [String: Double], notes: [String], features: SpeechFeatures.Summary?)?
+    private var pending: (category: String, method: String, material: TestMaterial, requested: [String: Double], notes: [String], features: SpeechFeatures.Summary?)?
+    private var speechRequest = 0
     private var matrixTask: Task<Void, Never>?
     private var counter = 0
     private let persistence: URL?
@@ -87,6 +88,7 @@ final class ExperimentStore: ObservableObject {
     }
 
     func stopAll(reason: String = "user STOP") {
+        speechRequest += 1
         matrixTask?.cancel()
         matrixRunning = false
         controller.stop(reason: reason)
@@ -95,7 +97,9 @@ final class ExperimentStore: ObservableObject {
     func playSpeech(_ text: String, method: SpeechMappingMethod) async {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { speechStatus = "Enter text first"; return }
-        guard let (speech, features) = await prepare(trimmed) else { return }
+        speechRequest += 1
+        let request = speechRequest
+        guard let (speech, features) = await prepare(trimmed), request == speechRequest else { return }
         let mapped = SpeechHapticMapper.map(features, method: method, label: "\"\(trimmed)\"", markers: speech.markers, pitchScale: pitchScale)
         let s = features.summary
         start(mapped.spec, category: "speech", method: method.rawValue,
@@ -103,15 +107,19 @@ final class ExperimentStore: ObservableObject {
               notes: mapped.notes + ["text=\(trimmed)", "language=\(speech.language)", "markers=\(speech.markers.count)"], features: s)
     }
 
-    func prepare(_ text: String) async -> (SynthesizedSpeech, SpeechFeatures)? {
+    func prepare(_ text: String, hidden: Bool = false) async -> (SynthesizedSpeech, SpeechFeatures)? {
         if let cached = speechCache[text] { return cached }
         preparingSpeech = true
-        speechStatus = "Rendering \"\(text)\" offline (no audio output)…"
+        speechStatus = hidden ? "Rendering hidden target offline (no audio output)…" : "Rendering \"\(text)\" offline (no audio output)…"
         defer { preparingSpeech = false }
         do {
             let speech = try await renderer.render(text: text)
             let features = SpeechFeatureExtractor.extract(samples: speech.samples, sampleRate: speech.sampleRate)
             speechCache[text] = (speech, features)
+            if hidden {
+                speechStatus = "Hidden target rendered"
+                return (speech, features)
+            }
             let s = features.summary
             speechStatus = String(format: "\"%@\" %.2fs, voiced %.0f%%, F0 %@, centroid %.0f Hz, F1/F2 %@", text, s.duration, s.voicedFraction * 100,
                                   s.meanF0.map { String(format: "%.0f Hz", $0) } ?? "n/a", s.meanCentroid,
@@ -128,11 +136,15 @@ final class ExperimentStore: ObservableObject {
     func startBlindTrial(method: SpeechMappingMethod) async {
         guard pendingBlindTrial == nil else { return }
         guard let target = BlindTestStats.vowels.randomElement() else { return }
-        guard let (speech, features) = await prepare(target) else { return }
+        speechRequest += 1
+        let request = speechRequest
+        guard let (speech, features) = await prepare(target, hidden: true), request == speechRequest,
+              pendingBlindTrial == nil else { return }
         let mapped = SpeechHapticMapper.map(features, method: method, label: "Blind trial", markers: speech.markers, pitchScale: pitchScale)
         var spec = mapped.spec
         spec.name = "Blind trial · \(method.short)"
-        let trial = BlindTrial(id: nextID(prefix: "BLIND"), timestamp: now(), listener: listener, method: method, material: material, target: target)
+        let trial = BlindTrial(id: nextID(prefix: "BLIND"), timestamp: now(), listener: listener, method: method, material: material, target: target,
+                               pitchScale: method == .pulseVoice ? pitchScale : nil)
         if start(spec, category: "blind", method: method.rawValue, requested: [:], notes: ["blind trial \(trial.id); target hidden"]) {
             pendingBlindTrial = trial
         }
@@ -165,7 +177,7 @@ final class ExperimentStore: ObservableObject {
     @discardableResult
     private func start(_ spec: HapticPatternSpec, category: String, method: String, requested: [String: Double],
                        notes: [String] = [], features: SpeechFeatures.Summary? = nil) -> Bool {
-        pending = (category, method, requested, notes, features)
+        pending = (category, method, material, requested, notes, features)
         activeMethod = method
         let ok = controller.play(spec)
         if !ok { pending = nil }
@@ -175,9 +187,10 @@ final class ExperimentStore: ObservableObject {
     private func record(_ r: HapticEngineController.PlayResult) {
         let p = pending
         pending = nil
+        if p?.category == "blind" && r.status != "finished" { pendingBlindTrial = nil }
         let rec = ExperimentRecord(
             id: nextID(prefix: "HVE"), timestamp: ISO8601DateFormatter.fractional.string(from: r.startedAt),
-            category: p?.category ?? "unknown", name: r.requested.name, method: p?.method ?? activeMethod, material: material,
+            category: p?.category ?? "unknown", name: r.requested.name, method: p?.method ?? activeMethod, material: p?.material ?? material,
             requested: p?.requested ?? [:], requestedPattern: r.requested,
             executedEventCount: r.executed.events.count, executedCurveCount: r.executed.curves.count, executedDuration: r.executed.duration,
             warnings: r.warnings, notes: p?.notes ?? [], status: r.status, error: r.error,
