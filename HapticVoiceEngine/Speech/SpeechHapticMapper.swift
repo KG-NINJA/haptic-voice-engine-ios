@@ -50,6 +50,10 @@ enum SpeechHapticMapper {
         let idx = Array(stride(from: 0, to: f.times.count, by: step)).filter { f.times[$0] <= duration }
 
         var spec = HapticPatternSpec(name: "\(label) · \(method.short) (experimental)")
+        guard !f.times.isEmpty else {
+            notes.append("no analysable sound; no vibration")
+            return Result(spec: spec, notes: notes)
+        }
         let envPoints = idx.map { HapticPatternSpec.CurvePoint(time: f.times[$0], value: f.envelope[$0]) }
         let sharpPoints = idx.map { HapticPatternSpec.CurvePoint(time: f.times[$0], value: normalizedCentroid(f.centroid[$0])) }
 

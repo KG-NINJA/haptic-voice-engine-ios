@@ -34,6 +34,14 @@ final class SpeechPipelineTests: XCTestCase {
         XCTAssertTrue(f.voiced.allSatisfy { !$0 })
     }
 
+    func testShortSilentInputProducesNoVibration() {
+        let f = SpeechFeatureExtractor.extract(samples: [Float](repeating: 0, count: 200), sampleRate: 22050)
+        for m in SpeechMappingMethod.allCases {
+            let spec = SpeechHapticMapper.map(f, method: m, label: "x").spec
+            XCTAssertTrue(spec.events.isEmpty && spec.curves.isEmpty, m.rawValue)
+        }
+    }
+
     func testCentroidNormalizationIsMonotonicAndBounded() {
         let values = [0, 100, 200, 500, 1000, 3000, 5000, 9000].map { SpeechHapticMapper.normalizedCentroid(Float($0)) }
         XCTAssertEqual(values.first, 0)
