@@ -81,7 +81,7 @@ final class HapticEngineController: ObservableObject {
     }
 
     @discardableResult
-    func play(_ spec: HapticPatternSpec) -> Bool {
+    func play(_ spec: HapticPatternSpec, maxDuration: Double = HapticLimits.maxPlaybackDuration) -> Bool {
         guard capabilities.supportsHaptics else { fail(HapticError.unsupportedHardware); return false }
         guard engineReady else { fail(HapticError.engineNotReady); return false }
         guard !isPlaying else { fail(HapticError.busy); return false }
@@ -92,14 +92,14 @@ final class HapticEngineController: ObservableObject {
             return false
         }
         lastRefusal = nil
-        let (executed, warnings) = spec.validated()
+        let (executed, warnings) = spec.validated(limit: maxDuration)
         current = PlayResult(requested: spec, executed: executed, warnings: warnings, startedAt: Date(), status: "started")
         do {
             try backend.play(executed)
             governor.recordStart()
             playbackState = .playing(spec.name)
             log("play \(spec.name) duration=\(String(format: "%.2f", executed.duration))s events=\(executed.events.count) curves=\(executed.curves.count)" + (warnings.isEmpty ? "" : " warnings=\(warnings.joined(separator: "; "))"))
-            armWatchdog(for: executed.duration)
+            armWatchdog(for: min(executed.duration, HapticLimits.maxAudioFileDuration))
             return true
         } catch {
             current?.status = "failed"
@@ -195,7 +195,7 @@ final class HapticEngineController: ObservableObject {
     private func armWatchdog(for duration: Double) {
         watchdog?.cancel()
         watchdog = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: UInt64((min(duration, HapticLimits.maxPlaybackDuration) + 1.0) * 1_000_000_000))
+            try? await Task.sleep(nanoseconds: UInt64((duration + 1.0) * 1_000_000_000))
             guard !Task.isCancelled else { return }
             await MainActor.run {
                 guard let self, self.isPlaying else { return }

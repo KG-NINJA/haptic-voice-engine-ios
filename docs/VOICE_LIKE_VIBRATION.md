@@ -68,8 +68,8 @@ try player.start(atTime: CHHapticTimeImmediate)
 ### From an audio file
 
 ```swift
-let events = try PulseVoice.events(audioFile: url)          // first options.maxDuration (3 s) only
-// or: let audio = try AudioFileLoader.load(url: url, maxDuration: 3)
+let events = try PulseVoice.events(audioFile: url)          // first options.maxDuration (default 3 s) only
+// or: let audio = try AudioFileLoader.load(url: url, maxDuration: 60)
 //     PulseVoice.events(samples: audio.samples, sampleRate: audio.sampleRate)
 let player = try engine.makePlayer(with: PulseVoice.pattern(events))
 ```

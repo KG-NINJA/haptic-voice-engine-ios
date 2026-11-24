@@ -210,7 +210,12 @@ struct ContentView: View {
             .fileImporter(isPresented: $showAudioImporter, allowedContentTypes: [.audio]) { result in
                 if case .success(let url) = result { Task { await store.loadAudioFile(url) } }
             }
-            Text("Audio files: the first 3 s are analysed (never played). Only pitch (clamped 80–300 Hz) and rhythm survive; timbre, vowels and music are not reproduced.")
+            Picker("File length", selection: $store.audioFileCap) {
+                ForEach(HapticLimits.audioFileDurations, id: \.self) { Text(String(format: "%.0f s", $0)).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            .accessibilityIdentifier("audioFileCap")
+            Text("Audio files: up to the chosen length (max 60 s) is analysed, never played. STOP ends playback at once. Only pitch (clamped 80–300 Hz) and rhythm survive; timbre, vowels and music are not reproduced.")
                 .font(.caption2).foregroundStyle(.secondary)
             if store.preparingSpeech { ProgressView().frame(maxWidth: .infinity) }
             if !store.speechStatus.isEmpty {

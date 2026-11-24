@@ -38,12 +38,13 @@ enum SpeechHapticMapper {
         var notes: [String]
     }
 
-    static func map(_ f: SpeechFeatures, method: SpeechMappingMethod, label: String, markers: [SynthesizedSpeech.Marker] = [], pitchScale: Double = 1) -> Result {
+    static func map(_ f: SpeechFeatures, method: SpeechMappingMethod, label: String, markers: [SynthesizedSpeech.Marker] = [], pitchScale: Double = 1,
+                    maxDuration: Double = HapticLimits.maxPlaybackDuration) -> Result {
         var notes: [String] = []
         var duration = f.duration
-        if duration > HapticLimits.maxPlaybackDuration {
-            notes.append(String(format: "speech is %.2fs; truncated to %.1fs safety limit", duration, HapticLimits.maxPlaybackDuration))
-            duration = HapticLimits.maxPlaybackDuration
+        if duration > maxDuration {
+            notes.append(String(format: "speech is %.2fs; truncated to %.1fs safety limit", duration, maxDuration))
+            duration = maxDuration
         }
         duration = max(duration, HapticLimits.minDuration)
         let step = max(1, Int((controlInterval / max(f.hop, 1e-6)).rounded()))

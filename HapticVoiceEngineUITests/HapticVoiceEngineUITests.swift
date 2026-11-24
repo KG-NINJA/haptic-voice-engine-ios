@@ -93,6 +93,7 @@ final class HapticVoiceEngineUITests: XCTestCase {
         let play = app.buttons["playAudioFile"]
         XCTAssertTrue(play.waitForExistence(timeout: 10))
         XCTAssertTrue(app.buttons["chooseAudioFile"].exists)
+        XCTAssertTrue(app.segmentedControls["audioFileCap"].buttons["60 s"].isSelected)
         scrollTo(play, in: app)
         XCTAssertTrue(app.staticTexts["speechStatus"].waitForLabel(containing: "fixture-150Hz.wav", timeout: 30), label(app, "speechStatus"))
         XCTAssertTrue(label(app, "speechStatus").contains("F0 1"), label(app, "speechStatus"))

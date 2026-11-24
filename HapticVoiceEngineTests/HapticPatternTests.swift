@@ -15,6 +15,16 @@ final class HapticPatternTests: XCTestCase {
         XCTAssertEqual(curves.last!.startTime + curves.last!.points.last!.time, points.last!.time, accuracy: 1e-9)
     }
 
+    func testAudioFileLimitAllowsLongerPatternsButNeverPast60s() {
+        var spec = HapticPatternSpec(name: "x")
+        spec.events = [.init(kind: .continuous, time: 0, duration: 90, intensity: 1, sharpness: 0.5),
+                       .init(kind: .transient, time: 25, duration: 0, intensity: 1, sharpness: 1)]
+        XCTAssertEqual(spec.validated(limit: 30).0.events.count, 2)
+        XCTAssertEqual(spec.validated(limit: 30).0.events[0].duration, 30)
+        XCTAssertEqual(spec.validated(limit: 600).0.events[0].duration, HapticLimits.maxAudioFileDuration)
+        XCTAssertEqual(spec.validated().0.events[0].duration, HapticLimits.maxPlaybackDuration)
+    }
+
     func testValidationClampsAndTruncatesToSafetyLimit() {
         var spec = HapticPatternSpec(name: "x")
         spec.events = [.init(kind: .continuous, time: 0, duration: 10, intensity: 2, sharpness: -1),

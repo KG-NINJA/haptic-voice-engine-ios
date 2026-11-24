@@ -34,6 +34,15 @@ final class SpeechPipelineTests: XCTestCase {
         XCTAssertTrue(f.voiced.allSatisfy { !$0 })
     }
 
+    func testMappingHonoursLongerAudioFileCap() {
+        let f = SpeechFeatureExtractor.extract(samples: SyntheticSignal.vowel(f0: 150, seconds: 20), sampleRate: 22050)
+        let r = SpeechHapticMapper.map(f, method: .pulseVoice, label: "x", maxDuration: 15)
+        let last = r.spec.events.map(\.time).max() ?? 0
+        XCTAssertGreaterThan(last, 14)
+        XCTAssertLessThan(last, 15)
+        XCTAssertLessThan(SpeechHapticMapper.map(f, method: .pulseVoice, label: "x").spec.events.map(\.time).max() ?? 0, 3)
+    }
+
     func testShortSilentInputProducesNoVibration() {
         let f = SpeechFeatureExtractor.extract(samples: [Float](repeating: 0, count: 200), sampleRate: 22050)
         for m in SpeechMappingMethod.allCases {
