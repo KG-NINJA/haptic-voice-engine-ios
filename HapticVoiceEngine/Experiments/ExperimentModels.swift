@@ -1,4 +1,5 @@
 import Foundation
+import HapticVoiceKit
 
 enum TestMaterial: String, CaseIterable, Identifiable, Codable {
     case hand = "Phone held in hand"

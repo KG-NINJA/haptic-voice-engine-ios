@@ -1,6 +1,7 @@
 import CoreHaptics
 import XCTest
 @testable import HapticVoiceEngine
+import HapticVoiceKit
 
 final class HapticPatternTests: XCTestCase {
     func testChunkedCurvesRespectPointLimitAndStayContinuous() {

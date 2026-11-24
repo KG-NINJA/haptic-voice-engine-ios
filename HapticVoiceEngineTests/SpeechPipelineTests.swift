@@ -1,5 +1,6 @@
 import XCTest
 @testable import HapticVoiceEngine
+import HapticVoiceKit
 
 enum SyntheticSignal {
     /// Harmonic tone with an attack/decay envelope, a stand-in for a voiced vowel.
@@ -66,7 +67,7 @@ final class SpeechPipelineTests: XCTestCase {
         let gaps = zip(clicks.dropFirst(), clicks).map { $0 - $1 }.sorted()
         XCTAssertEqual(gaps[gaps.count / 2], 1.0 / 150, accuracy: 0.0005)
         XCTAssertGreaterThan(gaps.last ?? 0, 0.2, "silence between the two vowels must have no clicks")
-        XCTAssertLessThanOrEqual(clicks.count, Int(HapticLimits.maxPlaybackDuration * SpeechHapticMapper.pulsePitchRange.1) + 1)
+        XCTAssertLessThanOrEqual(clicks.count, Int(HapticLimits.maxPlaybackDuration * PulseVoiceOptions().maxPitch) + 1)
 
         let raised = SpeechHapticMapper.map(f, method: .pulseVoice, label: "x", pitchScale: 2).spec.events.filter { $0.kind == .transient }.map(\.time)
         let raisedGaps = zip(raised.dropFirst(), raised).map { $0 - $1 }.sorted()

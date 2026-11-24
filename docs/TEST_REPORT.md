@@ -42,3 +42,9 @@ No hardware measurement has been performed; nothing in this repository reports o
 - Added Method 4 "Simple voice": transient clicks one pitch period apart in voiced parts (pitch ×1/×1.5/×2,
   clamped 80–300 Hz), short sharp bursts for consonants, nothing in silence. Default speech method.
 - Simulator: 17 unit + 6 UI tests pass. Whether it sounds more voice-like needs the owner's listening on device.
+- Owner, iPhone SE (3rd gen): Simple voice was heard as voice-like (informal listening; words, pitch
+  setting and surface not recorded). Not yet backed by microphone measurements or blind trials.
+
+## Iteration 3: reusable package
+- Speech rendering, feature extraction and the Simple voice algorithm moved to the `HapticVoiceKit`
+  Swift package used by the app. `swift test` in `HapticVoiceKit` runs 3 package tests on macOS.

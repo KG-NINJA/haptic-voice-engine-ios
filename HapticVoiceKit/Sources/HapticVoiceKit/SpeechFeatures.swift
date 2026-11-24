@@ -1,31 +1,31 @@
 import Accelerate
 import Foundation
 
-struct SpeechFeatures: Codable, Equatable {
-    var hop: Double
-    var times: [Double]
-    var rms: [Float]
-    var envelope: [Float]
+public struct SpeechFeatures: Codable, Equatable {
+    public var hop: Double
+    public var times: [Double]
+    public var rms: [Float]
+    public var envelope: [Float]
     /// 0 where unvoiced.
-    var f0: [Float]
-    var voiced: [Bool]
-    var centroid: [Float]
+    public var f0: [Float]
+    public var voiced: [Bool]
+    public var centroid: [Float]
     /// LPC-envelope peak estimates for voiced frames, 0 where not estimated. Rough estimates only.
-    var f1: [Float]
-    var f2: [Float]
-    var duration: Double
+    public var f1: [Float]
+    public var f2: [Float]
+    public var duration: Double
 
-    struct Summary: Codable, Equatable {
-        var duration: Double
-        var voicedFraction: Double
-        var meanF0: Double?
-        var meanCentroid: Double
-        var medianF1: Double?
-        var medianF2: Double?
-        var peakRMS: Double
+    public struct Summary: Codable, Equatable {
+        public var duration: Double
+        public var voicedFraction: Double
+        public var meanF0: Double?
+        public var meanCentroid: Double
+        public var medianF1: Double?
+        public var medianF2: Double?
+        public var peakRMS: Double
     }
 
-    var summary: Summary {
+    public var summary: Summary {
         let voicedIdx = voiced.indices.filter { voiced[$0] }
         func mean(_ xs: [Float]) -> Double? { xs.isEmpty ? nil : Double(xs.reduce(0, +)) / Double(xs.count) }
         func median(_ xs: [Float]) -> Double? {
@@ -45,12 +45,12 @@ struct SpeechFeatures: Codable, Equatable {
 
 /// Frame-based analysis with vDSP: RMS, normalized envelope, autocorrelation F0, spectral centroid
 /// and LPC formant estimates.
-enum SpeechFeatureExtractor {
-    static let hopSeconds = 0.01
-    static let windowSeconds = 0.025
-    static let fftLog2n: vDSP_Length = 11
+public enum SpeechFeatureExtractor {
+    public static let hopSeconds = 0.01
+    public static let windowSeconds = 0.025
+    public static let fftLog2n: vDSP_Length = 11
 
-    static func extract(samples input: [Float], sampleRate: Double) -> SpeechFeatures {
+    public static func extract(samples input: [Float], sampleRate: Double) -> SpeechFeatures {
         let samples = trimSilence(input)
         let hop = max(1, Int(sampleRate * hopSeconds))
         let win = max(16, Int(sampleRate * windowSeconds))
@@ -87,13 +87,13 @@ enum SpeechFeatureExtractor {
                               f1: f1, f2: f2, duration: Double(samples.count) / sampleRate)
     }
 
-    static func trimSilence(_ samples: [Float], threshold: Float = 0.01) -> [Float] {
+    public static func trimSilence(_ samples: [Float], threshold: Float = 0.01) -> [Float] {
         guard let first = samples.firstIndex(where: { abs($0) > threshold }),
               let last = samples.lastIndex(where: { abs($0) > threshold }) else { return samples }
         return Array(samples[first...last])
     }
 
-    static func smooth(_ xs: [Float], radius: Int) -> [Float] {
+    public static func smooth(_ xs: [Float], radius: Int) -> [Float] {
         guard radius > 0, !xs.isEmpty else { return xs }
         return xs.indices.map { i in
             let lo = max(0, i - radius), hi = min(xs.count - 1, i + radius)
@@ -103,7 +103,7 @@ enum SpeechFeatureExtractor {
 
     /// Normalized autocorrelation pitch estimate within 70-400 Hz; nil when the periodicity is weak.
     /// Picks the shortest lag whose correlation is within 10% of the best, avoiding octave errors.
-    static func estimateF0(_ frame: [Float], sampleRate: Double, minHz: Double = 70, maxHz: Double = 400) -> Float? {
+    public static func estimateF0(_ frame: [Float], sampleRate: Double, minHz: Double = 70, maxHz: Double = 400) -> Float? {
         let minLag = max(1, Int(sampleRate / maxHz)), maxLag = min(Int(sampleRate / minHz), frame.count / 2)
         guard maxLag > minLag else { return nil }
         let x = vDSP.add(-vDSP.mean(frame), frame)
@@ -131,7 +131,7 @@ enum SpeechFeatureExtractor {
         return nil
     }
 
-    static func spectralCentroid(_ frame: [Float], sampleRate: Double, fft: vDSP.FFT<DSPSplitComplex>?, size: Int) -> Float {
+    public static func spectralCentroid(_ frame: [Float], sampleRate: Double, fft: vDSP.FFT<DSPSplitComplex>?, size: Int) -> Float {
         guard let fft else { return 0 }
         let mags = powerSpectrum(frame, fft: fft, size: size)
         let total = vDSP.sum(mags)
@@ -141,7 +141,7 @@ enum SpeechFeatureExtractor {
         return vDSP.dot(freqs, mags) / total
     }
 
-    static func powerSpectrum(_ frame: [Float], fft: vDSP.FFT<DSPSplitComplex>, size: Int) -> [Float] {
+    public static func powerSpectrum(_ frame: [Float], fft: vDSP.FFT<DSPSplitComplex>, size: Int) -> [Float] {
         var padded = [Float](repeating: 0, count: size)
         for (i, v) in frame.prefix(size).enumerated() { padded[i] = v }
         let half = size / 2
@@ -167,7 +167,7 @@ enum SpeechFeatureExtractor {
     }
 
     /// LPC (autocorrelation + Levinson-Durbin) envelope peaks between 200 and 3500 Hz.
-    static func estimateFormants(_ frame: [Float], sampleRate: Double) -> (Float, Float)? {
+    public static func estimateFormants(_ frame: [Float], sampleRate: Double) -> (Float, Float)? {
         var x = frame
         for i in stride(from: x.count - 1, to: 0, by: -1) { x[i] -= 0.97 * x[i - 1] }
         let order = min(2 + Int(sampleRate / 1000), 30)
@@ -197,7 +197,7 @@ enum SpeechFeatureExtractor {
         return (Float(peaks[0]), Float(peaks[1]))
     }
 
-    static func levinson(_ r: [Double], order: Int) -> [Double]? {
+    public static func levinson(_ r: [Double], order: Int) -> [Double]? {
         var a = [Double](repeating: 0, count: order + 1)
         a[0] = 1
         var e = r[0]

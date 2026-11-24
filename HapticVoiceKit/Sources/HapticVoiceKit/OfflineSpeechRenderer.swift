@@ -2,26 +2,26 @@ import AVFoundation
 
 /// Offline PCM rendering with AVSpeechSynthesizer.write. Nothing is ever played: the buffers are
 /// copied into memory and the synthesizer never routes audio to an output.
-struct SynthesizedSpeech {
-    struct Marker: Codable, Equatable {
-        var type: String
-        var time: Double
-        var text: String
+public struct SynthesizedSpeech {
+    public struct Marker: Codable, Equatable {
+        public var type: String
+        public var time: Double
+        public var text: String
     }
 
-    var text: String
-    var language: String
-    var voiceIdentifier: String?
-    var sampleRate: Double
-    var samples: [Float]
-    var markers: [Marker]
+    public var text: String
+    public var language: String
+    public var voiceIdentifier: String?
+    public var sampleRate: Double
+    public var samples: [Float]
+    public var markers: [Marker]
 
-    var duration: Double { sampleRate > 0 ? Double(samples.count) / sampleRate : 0 }
+    public var duration: Double { sampleRate > 0 ? Double(samples.count) / sampleRate : 0 }
 }
 
-enum SpeechRenderError: LocalizedError {
+public enum SpeechRenderError: LocalizedError {
     case noAudio, timeout
-    var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
         case .noAudio: return "Speech synthesizer returned no PCM data (voice may be unavailable)"
         case .timeout: return "Speech synthesis timed out"
@@ -30,21 +30,25 @@ enum SpeechRenderError: LocalizedError {
 }
 
 @MainActor
-final class SpeechSynthesisRenderer {
+public final class SpeechSynthesisRenderer {
     private var active: [AVSpeechSynthesizer] = []
 
-    nonisolated static func language(for text: String) -> String {
+    public init() {}
+
+    nonisolated public static func language(for text: String) -> String {
         let japanese = text.unicodeScalars.contains { (0x3040...0x30FF).contains($0.value) || (0x4E00...0x9FFF).contains($0.value) }
         return japanese ? "ja-JP" : "en-US"
     }
 
-    func render(text: String, language: String? = nil, timeout: TimeInterval = 20) async throws -> SynthesizedSpeech {
+    public func render(text: String, language: String? = nil, timeout: TimeInterval = 20) async throws -> SynthesizedSpeech {
         let lang = language ?? Self.language(for: text)
         let utterance = AVSpeechUtterance(string: text)
         let voice = AVSpeechSynthesisVoice(language: lang)
         utterance.voice = voice
         let synthesizer = AVSpeechSynthesizer()
+        #if os(iOS)
         synthesizer.usesApplicationAudioSession = false
+        #endif
         active.append(synthesizer)
         defer { active.removeAll { $0 === synthesizer } }
 

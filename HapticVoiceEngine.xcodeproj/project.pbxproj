@@ -14,11 +14,10 @@
 		6741950AA56B693C99547540 /* SpeechPipelineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67441D3368988C91433EDDEE /* SpeechPipelineTests.swift */; };
 		88AF2F6FA02294C9BC9AB888 /* HapticBackend.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201CF21900AC183B7D2C4B2D /* HapticBackend.swift */; };
 		92A0CD53A49AF95FC0699180 /* HapticVoiceEngineApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A87761BED2F25909A943D339 /* HapticVoiceEngineApp.swift */; };
-		97D667385322337F3937AD04 /* SpeechSynthesisRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53C5DFDBF78CDB8379E1B8C /* SpeechSynthesisRenderer.swift */; };
+		9D47D5580A1A31BD8243809D /* HapticVoiceKit in Frameworks */ = {isa = PBXBuildFile; productRef = CE3A284D6BAD4043A35AC669 /* HapticVoiceKit */; };
 		9EE3AEC17D290FE0FD46B9AC /* HapticPatternTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26C5DD5A32C7944F439C20B9 /* HapticPatternTests.swift */; };
 		B1ADDFD12C78270B4054F581 /* HapticTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B414C435DAA49858947233AE /* HapticTypes.swift */; };
 		C234A1A19F57C78AFDE602A4 /* ExperimentModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4023BD8B17F98ACE7B126A4B /* ExperimentModels.swift */; };
-		D684059E3F7804972A974C18 /* SpeechFeatureExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BFAC94A56576C1533539DA6 /* SpeechFeatureExtractor.swift */; };
 		E1C8945C8104189C48BFE506 /* ExperimentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F22E1F5CCA89FD2A365A4317 /* ExperimentStore.swift */; };
 		F119CB20817E52E0A09625CB /* SafetyGovernor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 519EE48DAA8C01165CCB8663 /* SafetyGovernor.swift */; };
 		F2F7A2C9725405AAB3F80D13 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F57E40537112C3B96221EB /* ContentView.swift */; };
@@ -45,7 +44,6 @@
 		0B3ACC972DACDCBB77F642E2 /* HapticEngineController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticEngineController.swift; sourceTree = "<group>"; };
 		0ED3643ACD93545C8814E3E0 /* HapticVoiceEngineUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = HapticVoiceEngineUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		14C176BCC158AE3E340B45B9 /* HapticVoiceEngine.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = HapticVoiceEngine.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		1BFAC94A56576C1533539DA6 /* SpeechFeatureExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechFeatureExtractor.swift; sourceTree = "<group>"; };
 		201CF21900AC183B7D2C4B2D /* HapticBackend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticBackend.swift; sourceTree = "<group>"; };
 		26C5DD5A32C7944F439C20B9 /* HapticPatternTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticPatternTests.swift; sourceTree = "<group>"; };
 		4023BD8B17F98ACE7B126A4B /* ExperimentModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExperimentModels.swift; sourceTree = "<group>"; };
@@ -57,19 +55,28 @@
 		A87761BED2F25909A943D339 /* HapticVoiceEngineApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticVoiceEngineApp.swift; sourceTree = "<group>"; };
 		ABA04AB058D48A6976629293 /* HapticVoiceEngineUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticVoiceEngineUITests.swift; sourceTree = "<group>"; };
 		B414C435DAA49858947233AE /* HapticTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticTypes.swift; sourceTree = "<group>"; };
-		B53C5DFDBF78CDB8379E1B8C /* SpeechSynthesisRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechSynthesisRenderer.swift; sourceTree = "<group>"; };
 		BC79FEB0553BCCFC06F01E6B /* HapticVoiceEngineTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = HapticVoiceEngineTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9F57E40537112C3B96221EB /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		F22E1F5CCA89FD2A365A4317 /* ExperimentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExperimentStore.swift; sourceTree = "<group>"; };
+		F47E1739268BBAD3F87941B2 /* HapticVoiceKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = HapticVoiceKit; path = HapticVoiceKit; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D4B585105B2CA80DB61BBA29 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9D47D5580A1A31BD8243809D /* HapticVoiceKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		07EB3B2EB24429DDC0DCBC55 /* Speech */ = {
 			isa = PBXGroup;
 			children = (
-				1BFAC94A56576C1533539DA6 /* SpeechFeatureExtractor.swift */,
 				6F0ED57251FF695CDE350672 /* SpeechHapticMapper.swift */,
-				B53C5DFDBF78CDB8379E1B8C /* SpeechSynthesisRenderer.swift */,
 			);
 			path = Speech;
 			sourceTree = "<group>";
@@ -114,6 +121,7 @@
 				E1CEE33D3E4F5FFABB0C62EF /* HapticVoiceEngine */,
 				298AACF282F799C0AA4D8DF2 /* HapticVoiceEngineTests */,
 				721665BC98CF22A0F0FEB92A /* HapticVoiceEngineUITests */,
+				B8B63F9B4B374A9145300907 /* Packages */,
 				ECFD594DD1E1F006C6B11F1E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -124,6 +132,14 @@
 				A87761BED2F25909A943D339 /* HapticVoiceEngineApp.swift */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		B8B63F9B4B374A9145300907 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				F47E1739268BBAD3F87941B2 /* HapticVoiceKit */,
+			);
+			name = Packages;
 			sourceTree = "<group>";
 		};
 		E1CEE33D3E4F5FFABB0C62EF /* HapticVoiceEngine */ = {
@@ -205,6 +221,7 @@
 			buildConfigurationList = F66F15488A73393C3E67D4D3 /* Build configuration list for PBXNativeTarget "HapticVoiceEngine" */;
 			buildPhases = (
 				94332544B30AE792DDC296EE /* Sources */,
+				D4B585105B2CA80DB61BBA29 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -212,6 +229,7 @@
 			);
 			name = HapticVoiceEngine;
 			packageProductDependencies = (
+				CE3A284D6BAD4043A35AC669 /* HapticVoiceKit */,
 			);
 			productName = HapticVoiceEngine;
 			productReference = 14C176BCC158AE3E340B45B9 /* HapticVoiceEngine.app */;
@@ -248,6 +266,9 @@
 			);
 			mainGroup = 74F3BEC0EAB32A840DD1CB63;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				56478FBB98B3089FB07F20EC /* XCLocalSwiftPackageReference "HapticVoiceKit" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = ECFD594DD1E1F006C6B11F1E /* Products */;
 			projectDirPath = "";
@@ -274,9 +295,7 @@
 				92A0CD53A49AF95FC0699180 /* HapticVoiceEngineApp.swift in Sources */,
 				166BDA4BA9259B98B03EC62E /* PatternLibrary.swift in Sources */,
 				F119CB20817E52E0A09625CB /* SafetyGovernor.swift in Sources */,
-				D684059E3F7804972A974C18 /* SpeechFeatureExtractor.swift in Sources */,
 				60DF6F242F4F61DBBF120275 /* SpeechHapticMapper.swift in Sources */,
-				97D667385322337F3937AD04 /* SpeechSynthesisRenderer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -582,6 +601,20 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		56478FBB98B3089FB07F20EC /* XCLocalSwiftPackageReference "HapticVoiceKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = HapticVoiceKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		CE3A284D6BAD4043A35AC669 /* HapticVoiceKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HapticVoiceKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 1609FE983822AB7A9F8F58CB /* Project object */;
 }

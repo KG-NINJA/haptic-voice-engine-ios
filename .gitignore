@@ -6,3 +6,5 @@ DerivedData/
 __pycache__/
 recordings/
 .DS_Store
+.build/
+.swiftpm/

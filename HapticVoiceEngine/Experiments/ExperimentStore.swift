@@ -1,4 +1,5 @@
 import Foundation
+import HapticVoiceKit
 import SwiftUI
 
 /// App model: connects the haptic controller, speech pipeline, experiment log and blind test.
