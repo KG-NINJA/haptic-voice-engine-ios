@@ -1,0 +1,53 @@
+{
+  "schema": "haptic-voice-engine/experiment-results/v1",
+  "exportedAt": "2026-01-01T00:00:00.000Z",
+  "app": "HapticVoiceEngine 1.0",
+  "device": "iPhone (model identifier)",
+  "os": "iOS 26.x",
+  "capabilities": { "supportsHaptics": true, "supportsAudio": true, "simulated": false },
+  "playsHapticsOnly": true,
+  "physicalVibrationConfirmed": null,
+  "records": [
+    {
+      "id": "HVE-EXAMPLE-0001",
+      "timestamp": "2026-01-01T00:00:00.000Z",
+      "category": "matrix",
+      "name": "Matrix I0.60-S0.25",
+      "method": "Characterization matrix",
+      "material": "Wooden desk",
+      "requested": { "intensity": 0.6, "sharpness": 0.25, "duration": 1.0 },
+      "requestedPattern": {
+        "name": "Matrix I0.60-S0.25",
+        "events": [ { "kind": "continuous", "time": 0, "duration": 1.0, "intensity": 0.6, "sharpness": 0.25 } ],
+        "curves": []
+      },
+      "executedEventCount": 1,
+      "executedCurveCount": 0,
+      "executedDuration": 1.0,
+      "warnings": [],
+      "notes": [],
+      "status": "finished",
+      "error": null,
+      "startedAt": "2026-01-01T00:00:00.000Z",
+      "endedAt": "2026-01-01T00:00:01.000Z",
+      "measuredPlaybackSeconds": 1.0,
+      "physicalConfirmation": null,
+      "speechFeatures": null,
+      "simulated": false,
+      "audioEventCount": 0
+    }
+  ],
+  "blindTrials": [
+    {
+      "id": "BLIND-EXAMPLE-0001",
+      "timestamp": "2026-01-01T00:05:00.000Z",
+      "listener": "listener-1",
+      "method": "Method 1: Envelope mapping",
+      "material": "Hollow wooden box",
+      "target": "あ",
+      "answer": null
+    }
+  ],
+  "engineLog": [],
+  "_note": "Shape example only (not app output, no measurement). physicalConfirmation is felt | not_felt | null. Real files come from the app's Export button."
+}
