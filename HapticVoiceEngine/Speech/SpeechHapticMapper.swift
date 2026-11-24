@@ -107,7 +107,7 @@ enum SpeechHapticMapper {
         for i in 1..<f.envelope.count where f.envelope[i] - f.envelope[i - 1] > threshold {
             result.append(f.times[i])
         }
-        return result.isEmpty ? [0] : result
+        return result.isEmpty && (f.envelope.max() ?? 0) > threshold ? [0] : result
     }
 
     static func spaced(_ times: [Double], minSpacing: Double = 0.06) -> [Double] {
