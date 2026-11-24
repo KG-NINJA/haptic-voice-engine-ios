@@ -50,6 +50,10 @@ enum SpeechHapticMapper {
         let idx = Array(stride(from: 0, to: f.times.count, by: step)).filter { f.times[$0] <= duration }
 
         var spec = HapticPatternSpec(name: "\(label) · \(method.short) (experimental)")
+        guard !f.times.isEmpty else {
+            notes.append("no analysable sound; no vibration")
+            return Result(spec: spec, notes: notes)
+        }
         let envPoints = idx.map { HapticPatternSpec.CurvePoint(time: f.times[$0], value: f.envelope[$0]) }
         let sharpPoints = idx.map { HapticPatternSpec.CurvePoint(time: f.times[$0], value: normalizedCentroid(f.centroid[$0])) }
 
@@ -107,7 +111,7 @@ enum SpeechHapticMapper {
         for i in 1..<f.envelope.count where f.envelope[i] - f.envelope[i - 1] > threshold {
             result.append(f.times[i])
         }
-        return result.isEmpty ? [0] : result
+        return result.isEmpty && (f.envelope.max() ?? 0) > threshold ? [0] : result
     }
 
     static func spaced(_ times: [Double], minSpacing: Double = 0.06) -> [Double] {

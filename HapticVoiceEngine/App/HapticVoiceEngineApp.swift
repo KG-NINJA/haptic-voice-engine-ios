@@ -1,3 +1,4 @@
+import HapticVoiceKit
 import SwiftUI
 
 @main
@@ -15,7 +16,21 @@ struct HapticVoiceEngineApp: App {
             controller.governor.cooldown = s
         }
         let isUITest = args.contains { $0.hasPrefix("-uiTesting") }
-        _store = StateObject(wrappedValue: ExperimentStore(controller: controller, persist: !isUITest))
+        let store = ExperimentStore(controller: controller, persist: !isUITest)
+        _store = StateObject(wrappedValue: store)
+        if args.contains("-uiTestingAudioFixture") { Self.loadFixture(into: store) }
+    }
+
+    /// UI tests cannot drive the system file picker, so they load a generated 150 Hz WAV through the same loader.
+    private static func loadFixture(into store: ExperimentStore) {
+        let sr = 22050.0
+        let samples = (0..<Int(sr)).map { i -> Float in
+            let t = Double(i) / sr
+            return Float(0.3 * (1...5).reduce(0.0) { $0 + sin(2 * .pi * 150 * Double($1) * t) / Double($1) })
+        }
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("fixture-150Hz.wav")
+        guard (try? AudioFileLoader.writeWAV(samples, sampleRate: sr, to: url)) != nil else { return }
+        Task { await store.loadAudioFile(url) }
     }
 
     var body: some Scene {

@@ -65,6 +65,21 @@ let player = try engine.makePlayer(with: PulseVoice.pattern(events))
 try player.start(atTime: CHHapticTimeImmediate)
 ```
 
+### From an audio file
+
+```swift
+let events = try PulseVoice.events(audioFile: url)          // first options.maxDuration (3 s) only
+// or: let audio = try AudioFileLoader.load(url: url, maxDuration: 3)
+//     PulseVoice.events(samples: audio.samples, sampleRate: audio.sampleRate)
+let player = try engine.makePlayer(with: PulseVoice.pattern(events))
+```
+
+`AudioFileLoader` decodes anything `AVAudioFile` reads (WAV, AIFF, CAF, M4A/AAC, MP3), mixes to mono
+and only analyses the samples; nothing is played. This is **not a speaker**: the output is the same
+pitch-rate click train, so a recorded voice keeps only its pitch (clamped 80–300 Hz) and rhythm.
+Timbre, formants, music, chords and effects are not reproduced. Audio without a detectable pitch
+(music, noise) mostly turns into consonant bursts. Not yet listened to on a device.
+
 Add the package with Xcode → Add Package Dependencies → Add Local… (or by URL to this repository,
 path `HapticVoiceKit`). iOS 17+.
 
