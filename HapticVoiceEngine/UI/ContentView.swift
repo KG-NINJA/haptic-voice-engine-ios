@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct ContentView: View {
     @ObservedObject var store: ExperimentStore
@@ -11,6 +12,7 @@ struct ContentView: View {
     @State private var method: SpeechMappingMethod = .pulseVoice
     @State private var customText = ""
     @State private var showLog = false
+    @State private var showAudioImporter = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -194,6 +196,22 @@ struct ContentView: View {
                     .disabled(!canPlay || store.preparingSpeech)
                     .accessibilityIdentifier("speech-custom")
             }
+            HStack {
+                Button("Choose audio file…") { showAudioImporter = true }
+                    .buttonStyle(.bordered)
+                    .disabled(store.preparingSpeech)
+                    .accessibilityIdentifier("chooseAudioFile")
+                Button(store.audioFile.map { "Play \($0.audio.name)" } ?? "Play file") { store.playAudioFile(method: method) }
+                    .buttonStyle(.borderedProminent)
+                    .lineLimit(1)
+                    .disabled(!canPlay || store.preparingSpeech || store.audioFile == nil)
+                    .accessibilityIdentifier("playAudioFile")
+            }
+            .fileImporter(isPresented: $showAudioImporter, allowedContentTypes: [.audio]) { result in
+                if case .success(let url) = result { Task { await store.loadAudioFile(url) } }
+            }
+            Text("Audio files: the first 3 s are analysed (never played). Only pitch (clamped 80–300 Hz) and rhythm survive; timbre, vowels and music are not reproduced.")
+                .font(.caption2).foregroundStyle(.secondary)
             if store.preparingSpeech { ProgressView().frame(maxWidth: .infinity) }
             if !store.speechStatus.isEmpty {
                 Text(store.speechStatus).font(.caption.monospaced()).accessibilityIdentifier("speechStatus")

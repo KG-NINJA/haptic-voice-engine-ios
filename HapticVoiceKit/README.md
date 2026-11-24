@@ -6,6 +6,7 @@ Haptics only; nothing is played through the speaker.
 
 - `SpeechSynthesisRenderer` — offline `AVSpeechSynthesizer.write` rendering to `[Float]` PCM.
 - `SpeechFeatureExtractor` — RMS envelope, F0, spectral centroid, rough F1/F2 (vDSP).
+- `AudioFileLoader.load(url:maxDuration:)` — mono `[Float]` from an audio file (analysis only); `PulseVoice.events(audioFile:options:)`.
 - `PulseVoice.events(samples:sampleRate:options:)` → `[PulseVoiceEvent]`; `PulseVoice.pattern(_:)` → `CHHapticPattern`.
 
 Technique, usage example and what has / has not been verified: [docs/VOICE_LIKE_VIBRATION.md](../docs/VOICE_LIKE_VIBRATION.md).

@@ -20,6 +20,8 @@ its reusable Swift package are documented in [docs/VOICE_LIKE_VIBRATION.md](docs
   renders PCM **offline only** (never played), features are extracted (RMS envelope,
   autocorrelation F0, spectral centroid, LPC formants F1/F2 where voiced) and mapped with
   four methods: simple voice (clicks at the voice pitch, default), envelope→intensity, spectrum→sharpness, combined curves + transients.
+- Audio file: pick a file (Files app), the first 3 s are analysed (never played) and played back with
+  the selected method. Only pitch (80–300 Hz) and rhythm carry over; this is not a speaker replacement.
 - 5×5 characterization matrix (intensity 0.2–1.0 × sharpness 0–1, 1 s each) per material.
 - Blind vowel test (target hidden), accuracy, confusion matrix, 20 % chance, binomial p-value.
 - Physical confirmation per play ("Felt vibration" / "Nothing felt") — API success ≠ vibration.

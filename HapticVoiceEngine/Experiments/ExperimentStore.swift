@@ -17,6 +17,7 @@ final class ExperimentStore: ObservableObject {
     @Published var pitchScale: Double = 1
     @Published private(set) var pendingBlindTrial: BlindTrial?
     @Published private(set) var lastExportURL: URL?
+    @Published private(set) var audioFile: (audio: LoadedAudio, features: SpeechFeatures)?
 
     let controller: HapticEngineController
     private let renderer = SpeechSynthesisRenderer()
@@ -129,6 +130,44 @@ final class ExperimentStore: ObservableObject {
             speechStatus = "Speech rendering failed: \(error.localizedDescription)"
             return nil
         }
+    }
+
+    // MARK: Audio file
+
+    /// Decodes the first 3 s of a user-chosen audio file for analysis only; nothing is played through the speaker.
+    func loadAudioFile(_ url: URL) async {
+        speechRequest += 1
+        let request = speechRequest
+        preparingSpeech = true
+        speechStatus = "Reading \"\(url.lastPathComponent)\" (analysis only, no audio output)…"
+        defer { preparingSpeech = false }
+        let result = await Task.detached { () -> Result<(LoadedAudio, SpeechFeatures), Error> in
+            let scoped = url.startAccessingSecurityScopedResource()
+            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+            return Result {
+                let audio = try AudioFileLoader.load(url: url, maxDuration: HapticLimits.maxPlaybackDuration)
+                return (audio, SpeechFeatureExtractor.extract(samples: audio.samples, sampleRate: audio.sampleRate))
+            }
+        }.value
+        guard request == speechRequest else { return }
+        switch result {
+        case .success(let (audio, features)):
+            audioFile = (audio, features)
+            let s = features.summary
+            speechStatus = String(format: "\"%@\" %.2fs of %.2fs%@, voiced %.0f%%, F0 %@", audio.name, audio.duration, audio.sourceDuration,
+                                  audio.truncated ? " (first 3 s only)" : "", s.voicedFraction * 100,
+                                  s.meanF0.map { String(format: "%.0f Hz", $0) } ?? "n/a (no pitch found)")
+        case .failure(let error):
+            speechStatus = "Could not read audio file: \(error.localizedDescription)"
+        }
+    }
+
+    func playAudioFile(method: SpeechMappingMethod) {
+        guard let (audio, features) = audioFile else { return }
+        let mapped = SpeechHapticMapper.map(features, method: method, label: "File \"\(audio.name)\"", pitchScale: pitchScale)
+        start(mapped.spec, category: "audioFile", method: method.rawValue,
+              requested: ["fileDuration": audio.sourceDuration, "analysedDuration": audio.duration, "sampleRate": audio.sampleRate, "pitchScale": pitchScale],
+              notes: mapped.notes + ["file=\(audio.name)"], features: features.summary)
     }
 
     // MARK: Blind test

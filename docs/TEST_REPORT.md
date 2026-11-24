@@ -48,3 +48,9 @@ No hardware measurement has been performed; nothing in this repository reports o
 ## Iteration 3: reusable package
 - Speech rendering, feature extraction and the Simple voice algorithm moved to the `HapticVoiceKit`
   Swift package used by the app. `swift test` in `HapticVoiceKit` runs 3 package tests on macOS.
+
+## Iteration 4: audio file input
+- `AudioFileLoader` / `PulseVoice.events(audioFile:)` in `HapticVoiceKit`. The app has "Choose audio file…" and "Play <file>"
+  (first 3 s, same methods and safety limits, `playsHapticsOnly` unchanged).
+- Simulator: 17 unit + 7 UI tests pass (a UI test loads a generated 150 Hz WAV through the real loader). `swift test`: 5 package tests.
+- Not verified: how file playback sounds on a device; file formats other than WAV in tests.

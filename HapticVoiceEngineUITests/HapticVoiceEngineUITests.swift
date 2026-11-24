@@ -88,6 +88,20 @@ final class HapticVoiceEngineUITests: XCTestCase {
         XCTAssertEqual(label(app, "activeMethod"), "Active method: Method 4: Simple voice (pitch pulse train)")
     }
 
+    func testAudioFileLoadsAndPlaysAsExperimentalPattern() {
+        let app = launch(extra: ["-uiTestingAudioFixture"])
+        let play = app.buttons["playAudioFile"]
+        XCTAssertTrue(play.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["chooseAudioFile"].exists)
+        scrollTo(play, in: app)
+        XCTAssertTrue(app.staticTexts["speechStatus"].waitForLabel(containing: "fixture-150Hz.wav", timeout: 30), label(app, "speechStatus"))
+        XCTAssertTrue(label(app, "speechStatus").contains("F0 1"), label(app, "speechStatus"))
+        XCTAssertTrue(play.isEnabled)
+        play.tap()
+        XCTAssertTrue(app.staticTexts["playbackState"].waitForLabel(containing: "(experimental)", timeout: 30), label(app, "playbackState"))
+        XCTAssertEqual(label(app, "activeMethod"), "Active method: Method 4: Simple voice (pitch pulse train)")
+    }
+
     func testBlindTrialHidesTargetAndRecordsAnswer() {
         let app = launch()
         let start = app.buttons["startBlind"]
