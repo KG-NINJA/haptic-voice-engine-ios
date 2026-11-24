@@ -41,6 +41,8 @@ enum HapticLimits {
     /// Audio-file playback may run longer; STOP, thermal, background and error stops still apply.
     static let audioFileDurations: [Double] = [3, 15, 30, 60]
     static let maxAudioFileDuration: Double = 60
+    /// Core Haptics continuous events last at most 30 s; longer ones are split.
+    static let maxContinuousEventDuration: Double = 30
     static let minDuration: Double = 0.1
     static let transientNominalDuration: Double = 0.03
     /// Minimum spacing used between transient events we generate. Core Haptics does not document a
@@ -98,6 +100,15 @@ extension HapticPatternSpec {
             return e
         }
         if copy.events.count < events.count { warnings.append("events after \(limit)s dropped") }
+        copy.events = copy.events.flatMap { e -> [Event] in
+            guard e.kind == .continuous, e.duration > HapticLimits.maxContinuousEventDuration else { return [e] }
+            return stride(from: 0, to: e.duration, by: HapticLimits.maxContinuousEventDuration).map { offset in
+                var part = e
+                part.time = e.time + offset
+                part.duration = min(HapticLimits.maxContinuousEventDuration, e.duration - offset)
+                return part
+            }
+        }
         copy.curves = curves.compactMap { c in
             guard c.startTime < limit else { return nil }
             var c = c
