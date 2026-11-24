@@ -32,6 +32,5 @@ struct SafetyGovernor {
     mutating func resetSession() {
         plays = 0
         sessionStart = nil
-        lastPlayEnd = nil
     }
 }
