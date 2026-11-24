@@ -97,15 +97,15 @@ def rms_db(x: np.ndarray) -> float:
     return 20 * np.log10(max(r, 1e-12))
 
 
-def spectrum(x: np.ndarray, rate: int) -> tuple[np.ndarray, np.ndarray]:
-    """Welch PSD on a fixed 8192-point grid (Hann, 50% overlap), so recordings of any length compare bin for bin."""
+def spectrum(x: np.ndarray, rate: int, seg: int | None = None) -> tuple[np.ndarray, np.ndarray]:
+    """Welch PSD (Hann, 50% overlap) on a fixed 8192-point grid; `seg` sets the window length (default min(len, 8192))
+    so a baseline can be analysed at the same resolution as a short clip."""
     n = 8192
-    if len(x) < n:
-        win = np.hanning(max(len(x), 2))
-        segs = [np.pad(x * win[:len(x)], (0, n - len(x)))]
-    else:
-        win = np.hanning(n)
-        segs = [x[i:i + n] * win for i in range(0, len(x) - n + 1, n // 2)]
+    seg = max(2, min(seg or len(x), n))
+    if len(x) < seg:
+        x = np.pad(x, (0, seg - len(x)))
+    win = np.hanning(seg)
+    segs = [np.pad(x[i:i + seg] * win, (0, n - seg)) for i in range(0, len(x) - seg + 1, max(1, seg // 2))]
     p = np.mean([np.abs(np.fft.rfft(s)) ** 2 for s in segs], axis=0) / (rate * float(np.sum(win ** 2)))
     return np.fft.rfftfreq(n, 1 / rate), p
 
@@ -129,7 +129,7 @@ def features(x: np.ndarray, rate: int, fmin: float = 20, fmax: float = 8000, bas
     band = (f >= fmin) & (f <= min(fmax, rate / 2))
     pb, fb = p[band], f[band]
     if baseline is not None:
-        bf, bp = spectrum(baseline, rate)
+        bf, bp = spectrum(baseline, rate, seg=min(len(x), 8192))
         bp_i = np.interp(fb, bf, bp)
         excess = np.clip(pb - bp_i, 0, None)
     else:
