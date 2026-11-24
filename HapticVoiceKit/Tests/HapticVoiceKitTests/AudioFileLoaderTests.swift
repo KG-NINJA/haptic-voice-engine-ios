@@ -1,3 +1,4 @@
+import AVFoundation
 import XCTest
 @testable import HapticVoiceKit
 
@@ -19,6 +20,27 @@ final class AudioFileLoaderTests: XCTestCase {
         XCTAssertLessThan(clicks.last ?? 99, 3)
         let gaps = zip(clicks.dropFirst(), clicks).map { $0 - $1 }.sorted()
         XCTAssertEqual(gaps[gaps.count / 2], 1.0 / 150, accuracy: 0.0005)
+    }
+
+    func testNonFiniteSamplesAreZeroed() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("hvk-\(UUID().uuidString).caf")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let settings: [String: Any] = [AVFormatIDKey: kAudioFormatLinearPCM, AVSampleRateKey: 8000.0, AVNumberOfChannelsKey: 1,
+                                       AVLinearPCMBitDepthKey: 32, AVLinearPCMIsFloatKey: true]
+        let file = try AVAudioFile(forWriting: url, settings: settings)
+        let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: 4))
+        buffer.frameLength = 4
+        for (i, v) in [Float(0.5), .infinity, .nan, -0.5].enumerated() { buffer.floatChannelData![0][i] = v }
+        try file.write(from: buffer)
+        let audio = try AudioFileLoader.load(url: url)
+        XCTAssertEqual(audio.samples, [0.5, 0, 0, -0.5])
+    }
+
+    func testSoundShorterThanAnalysisWindowStillGetsAFrame() {
+        let sr = 22050.0
+        let burst = PulseVoiceTests.vowel(f0: 150, seconds: 0.015, sampleRate: sr).map { $0 * 3 }
+        let f = SpeechFeatureExtractor.extract(samples: [Float](repeating: 0, count: 2000) + burst, sampleRate: sr)
+        XCTAssertGreaterThanOrEqual(f.times.count, 1)
     }
 
     func testMissingFileThrows() {
