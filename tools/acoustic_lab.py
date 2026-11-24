@@ -98,14 +98,15 @@ def rms_db(x: np.ndarray) -> float:
 
 
 def spectrum(x: np.ndarray, rate: int) -> tuple[np.ndarray, np.ndarray]:
-    """Welch-averaged power spectrum (Hann, 8192-point segments, 50% overlap)."""
-    n = 8192 if len(x) >= 8192 else 1 << max(8, int(np.log2(max(len(x), 256))))
+    """Welch PSD on a fixed 8192-point grid (Hann, 50% overlap), so recordings of any length compare bin for bin."""
+    n = 8192
     if len(x) < n:
-        x = np.pad(x, (0, n - len(x)))
-    win = np.hanning(n)
-    hop = n // 2
-    segs = [x[i:i + n] * win for i in range(0, len(x) - n + 1, hop)]
-    p = np.mean([np.abs(np.fft.rfft(s)) ** 2 for s in segs], axis=0)
+        win = np.hanning(max(len(x), 2))
+        segs = [np.pad(x * win[:len(x)], (0, n - len(x)))]
+    else:
+        win = np.hanning(n)
+        segs = [x[i:i + n] * win for i in range(0, len(x) - n + 1, n // 2)]
+    p = np.mean([np.abs(np.fft.rfft(s)) ** 2 for s in segs], axis=0) / (rate * float(np.sum(win ** 2)))
     return np.fft.rfftfreq(n, 1 / rate), p
 
 
