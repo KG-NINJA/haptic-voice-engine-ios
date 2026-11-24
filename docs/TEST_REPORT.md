@@ -26,10 +26,14 @@ blind trial hides the target and records the answer.
 `scripts/build_unsigned_ipa.sh` → `HapticVoiceEngine-unsigned.ipa`, arm64, Release,
 MinimumOSVersion 17.0, unsigned (to be signed by iloader).
 
-## Not verified (requires the physical iPhone)
-- Install via iloader and launch on a device.
-- Core Haptics engine start on real hardware and **physical vibration** (Level 1).
-- Any acoustic output, measurements, matrix characterisation, blind vowel results (Levels 2–5).
-- Thermal behaviour during sessions.
+## On-device result (owner, 2026-11-24)
+- Installed with iloader and run on the owner's iPhone: **vibration is felt** (Level 1 reached).
+- Speech experiments **do not sound like speech** to the owner (Level 5 not reached, informal
+  listening, no blind protocol). This matches the expected limits in HARDWARE_LIMITATIONS.md.
+
+## Not verified yet
+- Microphone measurements against a silent baseline (Level 2) and the 5×5 matrix per material (Level 3).
+- Blind vowel test with ≥ 25 trials (Level 4).
+- Thermal behaviour during long sessions.
 
 No hardware measurement has been performed; nothing in this repository reports one.
